@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weather</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #f0f0ed;
+    --surface:   #e8e8e4;
+    --border:    #d4d4ce;
+    --text:      #1a1a18;
+    --muted:     #8a8a82;
+
+    /* Data point colors */
+    --temp:      #c0392b;
+    --feels:     #e67e22;
+    --humidity:  #2980b9;
+    --wind:      #27ae60;
+    --rain:      #8e44ad;
+    --uv:        #d4a017;
+    --aqi:       #16a085;
+    --vis:       #6c5ce7;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 56px 72px;
+    position: relative;
+  }
+
+  /* Subtle texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='1' height='1' fill='%23000' fill-opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page { position: relative; z-index: 1; display: flex; flex-direction: column; height: 100vh; padding-bottom: 56px; }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 48px;
+    opacity: 0;
+    animation: rise 0.7s ease forwards 0.1s;
+  }
+
+  .location-block {}
+
+  .location-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 52px;
+    line-height: 1.05;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+
+  .location-region {
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  .header-right {
+    text-align: right;
+  }
+
+  .clock {
+    font-family: 'DM Serif Display', serif;
+    font-size: 52px;
+    line-height: 1.05;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+
+  .date-line {
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  /* ── Hero temperature ── */
+  .hero {
+    display: flex;
+    align-items: flex-end;
+    gap: 40px;
+    margin-bottom: 48px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--border);
+    opacity: 0;
+    animation: rise 0.7s ease forwards 0.25s;
+  }
+
+  .temp-main {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(100px, 14vw, 180px);
+    line-height: 0.85;
+    color: var(--temp);
+    letter-spacing: -4px;
+  }
+
+  .temp-unit {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(40px, 5vw, 72px);
+    color: var(--temp);
+    opacity: 0.5;
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+
+  .hero-right {
+    flex: 1;
+    padding-bottom: 16px;
+  }
+
+  .condition-text {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(24px, 3vw, 40px);
+    color: var(--text);
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+
+  .condition-icon {
+    width: 64px;
+    height: 64px;
+    filter: grayscale(0.3);
+  }
+
+  .feels-like {
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    margin-top: 8px;
+  }
+
+  .feels-like span {
+    color: var(--feels);
+    font-weight: 400;
+  }
+
+  /* ── Data grid ── */
+  .data-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    flex: 1;
+    opacity: 0;
+    animation: rise 0.7s ease forwards 0.4s;
+  }
+
+  .data-card {
+    background: var(--surface);
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: background 0.2s;
+  }
+
+  .data-card:hover { background: var(--border); }
+
+  .data-label {
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .data-value {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(28px, 3.5vw, 46px);
+    line-height: 1;
+    letter-spacing: -0.5px;
+  }
+
+  .data-sub {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  .data-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 4px;
+    overflow: hidden;
+  }
+
+  .data-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 1s ease;
+  }
+
+  /* Color assignments */
+  .card-humidity .data-value  { color: var(--humidity); }
+  .card-humidity .data-bar-fill { background: var(--humidity); }
+  .card-wind    .data-value  { color: var(--wind); }
+  .card-rain    .data-value  { color: var(--rain); }
+  .card-rain    .data-bar-fill { background: var(--rain); }
+  .card-uv      .data-value  { color: var(--uv); }
+  .card-uv      .data-bar-fill { background: var(--uv); }
+  .card-aqi     .data-value  { color: var(--aqi); }
+  .card-aqi     .data-bar-fill { background: var(--aqi); }
+  .card-vis     .data-value  { color: var(--vis); }
+  .card-vis     .data-bar-fill { background: var(--vis); }
+
+  /* ── Footer ── */
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 24px;
+    opacity: 0;
+    animation: rise 0.5s ease forwards 0.6s;
+  }
+
+  .refresh-info {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .powered-by {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--border);
+  }
+
+  /* ── Error / Loading states ── */
+  .state-screen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    color: var(--muted);
+  }
+
+  .state-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 32px;
+    color: var(--text);
+  }
+
+  .state-sub {
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    text-align: center;
+    max-width: 420px;
+    line-height: 1.8;
+  }
+
+  .setup-box {
+    margin-top: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 24px 32px;
+    font-size: 13px;
+    line-height: 2;
+    max-width: 500px;
+  }
+
+  .setup-box code {
+    background: var(--border);
+    padding: 2px 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+  }
+
+  /* ── Animations ── */
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Loading dots */
+  .dots { display: flex; gap: 8px; }
+  .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--muted);
+    animation: blink 1.4s ease-in-out infinite;
+  }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink {
+    0%,100% { opacity: 0.3; transform: scale(0.8); }
+    50%      { opacity: 1;   transform: scale(1); }
+  }
+</style>
+</head>
+<body>
+<div class="page" id="page">
+  <div class="state-screen" id="loadingScreen">
+    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="state-title">Detecting location…</div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────
+const API_KEY = 'YOUR_API_KEY_HERE'; // Replace with your WeatherAPI.com key
+const REFRESH_MINUTES = 10;
+// ────────────────────────────────────────────────────────
+
+const UV_LABELS  = ['Low','Low','Low','Moderate','Moderate','Moderate','High','High','Very High','Very High','Very High','Extreme'];
+const AQI_LABELS = ['—', 'Good', 'Moderate', 'Unhealthy for Sensitive', 'Unhealthy', 'Very Unhealthy', 'Hazardous'];
+const AQI_COLORS = ['#999', '#27ae60', '#d4a017', '#e67e22', '#c0392b', '#8e44ad', '#6d0839'];
+
+let lastUpdated = null;
+
+function updateClock() {
+  const el = document.getElementById('clockEl');
+  const de = document.getElementById('dateEl');
+  if (!el) return;
+  const now = new Date();
+  const h = now.getHours().toString().padStart(2,'0');
+  const m = now.getMinutes().toString().padStart(2,'0');
+  el.textContent = `${h}:${m}`;
+  de.textContent = now.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+}
+
+function getLocation() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Geolocation not supported'));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      pos => resolve(`${pos.coords.latitude},${pos.coords.longitude}`),
+      err => reject(err),
+      { timeout: 10000 }
+    );
+  });
+}
+
+async function fetchWeather(query) {
+  const url = `https://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=${query}&aqi=yes`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`API error ${res.status}`);
+  return res.json();
+}
+
+function uvLabel(uv) {
+  const i = Math.min(Math.round(uv), UV_LABELS.length - 1);
+  return UV_LABELS[i];
+}
+
+function aqiLabel(idx) {
+  return AQI_LABELS[idx] || '—';
+}
+
+function aqiColor(idx) {
+  return AQI_COLORS[idx] || '#999';
+}
+
+function windDir(deg) {
+  const dirs = ['N','NE','E','SE','S','SW','W','NW'];
+  return dirs[Math.round(deg / 45) % 8];
+}
+
+function render(data) {
+  const c  = data.current;
+  const l  = data.location;
+  const aqi = c.air_quality ? (c.air_quality['us-epa-index'] || 0) : 0;
+
+  const page = document.getElementById('page');
+
+  page.innerHTML = `
+    <div class="header">
+      <div class="location-block">
+        <div class="location-name">${l.name}</div>
+        <div class="location-region">${l.region} · ${l.country}</div>
+      </div>
+      <div class="header-right">
+        <div class="clock" id="clockEl">--:--</div>
+        <div class="date-line" id="dateEl">—</div>
+      </div>
+    </div>
+
+    <div class="hero">
+      <div class="temp-main">${Math.round(c.temp_f)}</div>
+      <div class="temp-unit">°F</div>
+      <div class="hero-right">
+        <img class="condition-icon" src="https:${c.condition.icon.replace('64x64','128x128')}" alt="${c.condition.text}">
+        <div class="condition-text">${c.condition.text}</div>
+        <div class="feels-like">Feels like <span>${Math.round(c.feelslike_f)}°F</span></div>
+      </div>
+    </div>
+
+    <div class="data-grid">
+
+      <div class="data-card card-humidity">
+        <div class="data-label">Humidity</div>
+        <div class="data-value">${c.humidity}<span style="font-size:0.5em;opacity:0.6">%</span></div>
+        <div class="data-bar"><div class="data-bar-fill" style="width:${c.humidity}%"></div></div>
+        <div class="data-sub">${c.humidity < 30 ? 'Dry' : c.humidity < 60 ? 'Comfortable' : 'Humid'}</div>
+      </div>
+
+      <div class="data-card card-wind">
+        <div class="data-label">Wind</div>
+        <div class="data-value">${Math.round(c.wind_mph)}<span style="font-size:0.45em;opacity:0.6"> mph</span></div>
+        <div class="data-sub">${windDir(c.wind_degree)} · Gusts ${Math.round(c.gust_mph)} mph</div>
+      </div>
+
+      <div class="data-card card-rain">
+        <div class="data-label">Chance of Rain</div>
+        <div class="data-value">${c.precip_in > 0 ? Math.round(c.precip_in * 100) : 0}<span style="font-size:0.5em;opacity:0.6">%</span></div>
+        <div class="data-bar"><div class="data-bar-fill" style="width:${c.precip_in > 0 ? Math.min(c.precip_in * 100, 100) : 0}%"></div></div>
+        <div class="data-sub">${c.precip_in}"  precipitation now</div>
+      </div>
+
+      <div class="data-card card-uv">
+        <div class="data-label">UV Index</div>
+        <div class="data-value">${c.uv}</div>
+        <div class="data-bar"><div class="data-bar-fill" style="width:${Math.min(c.uv / 11 * 100, 100)}%"></div></div>
+        <div class="data-sub">${uvLabel(c.uv)}</div>
+      </div>
+
+      <div class="data-card card-aqi">
+        <div class="data-label">Air Quality</div>
+        <div class="data-value" style="color:${aqiColor(aqi)}">${aqi}</div>
+        <div class="data-bar"><div class="data-bar-fill" style="width:${Math.min(aqi/6*100,100)}%; background:${aqiColor(aqi)}"></div></div>
+        <div class="data-sub">${aqiLabel(aqi)}</div>
+      </div>
+
+      <div class="data-card card-vis">
+        <div class="data-label">Visibility</div>
+        <div class="data-value">${Math.round(c.vis_miles)}<span style="font-size:0.45em;opacity:0.6"> mi</span></div>
+        <div class="data-sub">${c.vis_miles >= 10 ? 'Clear' : c.vis_miles >= 5 ? 'Good' : c.vis_miles >= 2 ? 'Moderate' : 'Poor'}</div>
+      </div>
+
+    </div>
+
+    <div class="footer">
+      <div class="refresh-info">Updated ${new Date().toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit'})} · Refreshes every ${REFRESH_MINUTES} min</div>
+      <div class="powered-by">WeatherAPI.com</div>
+    </div>
+  `;
+
+  updateClock();
+  setInterval(updateClock, 1000);
+}
+
+function showError(title, message) {
+  document.getElementById('page').innerHTML = `
+    <div class="state-screen">
+      <div class="state-title">${title}</div>
+      <div class="state-sub">${message}</div>
+      ${title.includes('API') ? `
+      <div class="setup-box">
+        1. Sign up free at <code>weatherapi.com</code><br>
+        2. Copy your API key from the dashboard<br>
+        3. Open this file and replace <code>YOUR_API_KEY_HERE</code> at the top of the script
+      </div>` : ''}
+    </div>
+  `;
+}
+
+async function load() {
+  try {
+    document.getElementById('page').innerHTML = `
+      <div class="state-screen">
+        <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        <div class="state-title">Detecting location…</div>
+      </div>`;
+
+    if (API_KEY === 'YOUR_API_KEY_HERE') {
+      showError('API Key Required', 'You need a free WeatherAPI.com key to use this widget.');
+      return;
+    }
+
+    const query = await getLocation();
+
+    document.querySelector('.state-title') && (document.querySelector('.state-title').textContent = 'Fetching weather…');
+
+    const data = await fetchWeather(query);
+    render(data);
+    lastUpdated = Date.now();
+
+  } catch (err) {
+    if (err.code === 1) {
+      showError('Location Access Denied', 'Please allow location access in your browser to display local weather.');
+    } else if (err.message.includes('API error 403') || err.message.includes('401')) {
+      showError('API Key Invalid', 'Check that your WeatherAPI.com key is correct and active.');
+    } else {
+      showError('Could not load weather', `${err.message} — will retry in ${REFRESH_MINUTES} minutes.`);
+    }
+  }
+}
+
+// Initial load
+load();
+
+// Refresh on schedule
+setInterval(load, REFRESH_MINUTES * 60 * 1000);
+</script>
+</body>
+</html>
