@@ -7,619 +7,558 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:       #ebebeb;
-    --surface:  #e0e0e0;
-    --surface2: #d4d4d4;
-    --border:   #c8c8c8;
-    --text:     #141414;
-    --muted:    #888;
-
-    --temp:     #e63946;
-    --feels:    #f4872b;
-    --humidity: #1d7fc4;
-    --wind:     #2eaf6e;
-    --rain:     #7b5ea7;
-    --uv:       #c9960a;
-    --vis:      #5548c8;
+    --card:   rgba(255,255,255,0.42);
+    --border: rgba(255,255,255,0.60);
+    --text:   #0d2340;
+    --muted:  rgba(13,35,64,0.52);
+    --shadow: 0 2px 16px rgba(0,30,80,0.10);
+    --temp:   #e63946;
+    --feels:  #f4872b;
+    --hum:    #1a6fba;
+    --wind:   #1a9155;
+    --rain:   #6b4caa;
+    --uv:     #b8820a;
+    --vis:    #4438b8;
   }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  * { margin:0; padding:0; box-sizing:border-box; }
 
+  /* Scale the whole page to match 125% browser zoom at 100% */
   body {
-    background: var(--bg);
-    color: var(--text);
     font-family: 'Barlow', sans-serif;
-    height: 100vh;
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    padding: 32px 48px 28px;
+    position: relative;
+    width: calc(100vw / 1.25);
+    height: calc(100vh / 1.25);
+    transform: scale(1.25);
+    transform-origin: top left;
   }
 
-  /* ── HEADER ── */
+  /* ─── SKY ─── */
+  .sky {
+    position: absolute; inset: 0; z-index: 0;
+    background: linear-gradient(to bottom,
+      #3a7ec8 0%, #5a9edd 25%, #85bfee 55%, #b8d9f7 78%, #d8eefb 100%);
+  }
+
+  /* ─── SUN ─── */
+  .sun-wrap {
+    position: absolute;
+    top: -10px;
+    right: 60px;
+    width: 140px;
+    height: 140px;
+    z-index: 1;
+  }
+  .sun-core {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fffde0 20%, #ffe44d 60%, #ffc107 100%);
+    box-shadow: 0 0 30px 12px rgba(255,210,0,0.5), 0 0 80px 30px rgba(255,220,60,0.2);
+  }
+  /* SVG rays drawn once */
+  .sun-rays {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+  }
+
+  /* ─── MOUNTAINS ─── */
+  .mountains {
+    position: absolute; bottom: 0; left: 0;
+    width: 100%; height: 38%;
+    z-index: 1; pointer-events: none;
+  }
+
+  /* ─── PAGE ─── */
+  .page {
+    position: relative; z-index: 2;
+    display: flex; flex-direction: column;
+    height: 100%;
+    padding: 24px 40px 20px;
+  }
+
+  /* ─── HEADER ─── */
   .header {
-    display: flex;
-    align-items: center;
+    display: flex; align-items: center;
     justify-content: space-between;
-    margin-bottom: 20px;
-    flex-shrink: 0;
-    opacity: 0;
-    animation: rise 0.6s ease forwards 0.05s;
+    margin-bottom: 14px; flex-shrink: 0;
+    opacity: 0; animation: rise .5s ease forwards .05s;
   }
-
   .location-name {
     font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 900;
-    font-size: 48px;
-    line-height: 1;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    font-weight: 900; font-size: 56px; line-height: 1;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text);
   }
-
   .location-region {
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-top: 4px;
+    font-size: 12px; font-weight: 700;
+    letter-spacing: .22em; text-transform: uppercase;
+    color: var(--muted); margin-top: 4px;
   }
-
-  .header-center {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .condition-icon { width: 68px; height: 68px; }
-
-  .condition-text {
+  .hdr-center { display: flex; align-items: center; gap: 10px; }
+  .cond-icon { width: 56px; height: 56px; }
+  .cond-text {
     font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 800;
-    font-size: 26px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--muted);
+    font-weight: 800; font-size: 28px;
+    text-transform: uppercase; color: var(--muted); letter-spacing: 1px;
   }
-
-  .header-right { text-align: right; }
-
+  .hdr-right { text-align: right; position: relative; z-index: 3; }
   .clock {
     font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 900;
-    font-size: 48px;
-    line-height: 1;
-    letter-spacing: 2px;
+    font-weight: 900; font-size: 56px; line-height: 1;
+    letter-spacing: 2px; color: var(--text);
   }
-
   .date-line {
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-top: 4px;
+    font-size: 12px; font-weight: 700;
+    letter-spacing: .22em; text-transform: uppercase;
+    color: var(--muted); margin-top: 4px;
   }
 
   .divider {
-    height: 2px;
-    background: var(--border);
-    margin-bottom: 18px;
-    flex-shrink: 0;
+    height: 1.5px; background: rgba(255,255,255,.55);
+    margin-bottom: 14px; flex-shrink: 0;
   }
 
-  /* ── MAIN LAYOUT ── */
+  /* ─── MAIN GRID ─── */
   .main {
     display: grid;
-    grid-template-columns: 260px 1fr;
-    gap: 16px;
-    flex: 1;
-    min-height: 0;
-    opacity: 0;
-    animation: rise 0.6s ease forwards 0.2s;
+    grid-template-columns: 220px 1fr;
+    gap: 10px;
+    flex: 1; min-height: 0;
+    opacity: 0; animation: rise .5s ease forwards .15s;
   }
 
-  /* ── LEFT COL ── */
+  /* ─── LEFT COLUMN ─── */
   .left-col {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    display: flex; flex-direction: column; gap: 10px;
   }
 
+  .gc { /* glass card base */
+    background: var(--card);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    border-radius: 3px;
+  }
+
+  /* Temperature card — fills available space */
   .temp-card {
-    background: var(--surface);
-    padding: 20px 18px 16px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    flex-shrink: 0;
+    flex: 1; padding: 20px 18px 16px;
+    display: flex; flex-direction: column; justify-content: space-between;
   }
-
-  .temp-label {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: var(--muted);
-    align-self: flex-start;
+  .temp-lbl {
+    font-size: 11px; font-weight: 800;
+    letter-spacing: .28em; text-transform: uppercase; color: var(--muted);
   }
-
-  .temp-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 4px;
-    align-self: flex-start;
-  }
-
-  .temp-big {
+  .temp-num-row { display: flex; align-items: flex-start; gap: 4px; margin-top: 4px; }
+  .temp-num {
     font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 900;
-    font-size: 100px;
-    line-height: 0.88;
-    color: var(--temp);
-    letter-spacing: -2px;
+    font-weight: 900; font-size: 110px; line-height: .85;
+    color: var(--temp); letter-spacing: -3px;
   }
-
-  .temp-unit-big {
+  .temp-deg {
     font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 32px;
-    color: var(--temp);
-    opacity: 0.55;
-    margin-top: 6px;
+    font-weight: 700; font-size: 34px;
+    color: var(--temp); opacity: .6; margin-top: 8px;
   }
-
-  .temp-scale-bar {
-    width: 100%;
-    height: 8px;
-    border-radius: 4px;
-    background: linear-gradient(to right, #1d7fc4, #2eaf6e, #c9960a, #f4872b, #e63946);
-    position: relative;
-    margin-top: 10px;
+  .tscale-bar {
+    height: 8px; border-radius: 4px;
+    background: linear-gradient(to right,#1d7fc4,#2eaf6e,#c9960a,#f4872b,#e63946);
+    position: relative; margin-top: 12px;
   }
-
-  .temp-scale-marker {
-    position: absolute;
-    top: -5px;
-    width: 4px;
-    height: 18px;
-    background: var(--text);
-    border-radius: 2px;
+  .tscale-marker {
+    position: absolute; top: -5px;
+    width: 4px; height: 18px;
+    background: var(--text); border-radius: 2px;
     transform: translateX(-50%);
   }
-
-  .temp-scale-labels {
-    display: flex;
-    justify-content: space-between;
-    font-size: 10px;
-    font-weight: 700;
-    color: var(--muted);
-    margin-top: 5px;
+  .tscale-lbls {
+    display: flex; justify-content: space-between;
+    font-size: 10px; font-weight: 700; color: var(--muted); margin-top: 5px;
   }
 
+  /* Feels like card — fixed height */
   .feels-card {
-    background: var(--surface);
-    padding: 16px 18px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    flex-shrink: 0;
+    flex-shrink: 0; padding: 14px 18px;
+    display: flex; flex-direction: column; gap: 10px;
   }
-
-  .feels-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
+  .feels-top { display: flex; justify-content: space-between; align-items: center; }
+  .feels-lbl {
+    font-size: 11px; font-weight: 800;
+    letter-spacing: .28em; text-transform: uppercase; color: var(--muted);
   }
-
-  .feels-label {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-
-  .feels-value {
+  .feels-val {
     font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 900;
-    font-size: 34px;
-    color: var(--feels);
-    line-height: 1;
+    font-weight: 900; font-size: 38px; line-height: 1; color: var(--feels);
   }
-
-  .thermo-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
+  .thermo-row { display: flex; align-items: center; gap: 10px; }
   .scale-col { flex: 1; }
 
-  /* ── RIGHT GRID ── */
+  /* ─── RIGHT 3×2 GRID ─── */
   .right-col {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(2, 1fr);
-    gap: 12px;
-    min-height: 0;
+    gap: 10px; min-height: 0;
   }
 
-  .data-card {
-    background: var(--surface);
-    padding: 16px 18px 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    min-height: 0;
-    overflow: hidden;
+  /* Each data card: content centered vertically, graphic on right */
+  .dc {
+    background: var(--card);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    border-radius: 3px;
+    padding: 0 20px;
+    display: flex; flex-direction: row;
+    align-items: center; justify-content: space-between;
+    gap: 10px; min-height: 0; overflow: hidden;
   }
-
-  .dc-label {
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--muted);
-    flex-shrink: 0;
+  .dc-text { display: flex; flex-direction: column; gap: 5px; }
+  .dc-lbl {
+    font-size: 11px; font-weight: 800;
+    letter-spacing: .22em; text-transform: uppercase; color: var(--muted);
+    line-height: 1.3;
   }
-
-  .dc-value {
+  .dc-val {
     font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 900;
-    font-size: clamp(26px, 2.8vw, 40px);
-    line-height: 1;
-    flex-shrink: 0;
+    font-weight: 900; font-size: clamp(36px,4vw,58px); line-height: .95;
   }
+  .dc-sub { font-size: 13px; font-weight: 700; color: var(--muted); margin-top: 2px; }
+  .dc-gfx { flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
 
-  .dc-sub {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--muted);
-    letter-spacing: 0.04em;
-    flex-shrink: 0;
-  }
-
-  .dc-graphic {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    align-items: flex-end;
-    overflow: hidden;
-  }
-
-  .gauge-svg { width: 100%; max-height: 58px; }
-
-  .h-bar-track {
-    width: 100%;
-    height: 8px;
-    background: var(--surface2);
-    border-radius: 4px;
-    overflow: hidden;
-    margin-top: 2px;
-  }
-
-  .h-bar-fill {
-    height: 100%;
-    border-radius: 4px;
-    transition: width 1.2s cubic-bezier(0.22,1,0.36,1);
-  }
-
-  .compass-wrap {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .wind-stats { display: flex; flex-direction: column; gap: 3px; }
-  .wind-stat { font-size: 11px; font-weight: 600; color: var(--muted); }
-  .wind-stat strong { font-weight: 800; color: var(--text); }
-
-  .aqi-bar-wrap {
-    width: 100%;
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    gap: 4px;
-  }
-
-  .aqi-gradient-bar {
-    height: 10px;
-    border-radius: 5px;
-    background: linear-gradient(to right, #00e400, #ffff00, #ff7e00, #ff0000, #8f3f97, #7e0023);
+  /* AQI bar */
+  .aqi-bar-wrap { width: 120px; display: flex; flex-direction: column; gap: 5px; }
+  .aqi-grad {
+    height: 12px; border-radius: 6px;
+    background: linear-gradient(to right,#00e400,#ffff00,#ff7e00,#ff0000,#8f3f97,#7e0023);
     position: relative;
   }
-
-  .aqi-marker {
-    position: absolute;
-    top: -5px;
-    width: 4px;
-    height: 20px;
-    background: var(--text);
-    border-radius: 2px;
+  .aqi-pin {
+    position: absolute; top: -5px;
+    width: 4px; height: 22px;
+    background: var(--text); border-radius: 2px;
     transform: translateX(-50%);
   }
-
-  .aqi-scale-labels {
-    display: flex;
-    justify-content: space-between;
-    font-size: 9px;
-    font-weight: 700;
-    color: var(--muted);
+  .aqi-lbls {
+    display: flex; justify-content: space-between;
+    font-size: 9px; font-weight: 700; color: var(--muted);
   }
 
-  /* ── FOOTER ── */
+  /* ─── FOOTER ─── */
   .footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 14px;
-    flex-shrink: 0;
-    opacity: 0;
-    animation: rise 0.5s ease forwards 0.4s;
+    display: flex; justify-content: space-between;
+    margin-top: 10px; flex-shrink: 0;
+    opacity: 0; animation: rise .5s ease forwards .3s;
   }
+  .foot-l { font-size: 11px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); }
+  .foot-r { font-size: 11px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: rgba(13,35,64,.28); }
 
-  .footer-txt {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--muted);
+  /* ─── FORECAST STRIP ─── */
+  .forecast-strip {
+    display: flex; gap: 8px;
+    margin-top: 10px; flex-shrink: 0;
+    opacity: 0; animation: rise .5s ease forwards .25s;
   }
-
-  .footer-right {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--border);
-  }
-
-  /* ── STATES ── */
-  .state-screen {
+  .fc-hour {
     flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
+    background: var(--card);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    border-radius: 3px;
+    padding: 8px 6px 7px;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 3px;
   }
-
-  .state-title {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 900;
-    font-size: 36px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+  .fc-hour.fc-now {
+    background: rgba(255,255,255,0.62);
+    border-color: rgba(255,255,255,0.85);
   }
-
-  .state-sub {
-    font-size: 14px;
-    font-weight: 600;
+  .fc-time {
+    font-size: 10px; font-weight: 800;
+    letter-spacing: .1em; text-transform: uppercase;
     color: var(--muted);
-    text-align: center;
-    max-width: 440px;
-    line-height: 1.7;
   }
+  .fc-now .fc-time { color: var(--text); }
+  .fc-icon { width: 28px; height: 28px; }
+  .fc-temp {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900; font-size: 18px; line-height: 1;
+    color: var(--text);
+  }
+  .fc-rain {
+    font-size: 10px; font-weight: 700;
+    color: var(--rain); letter-spacing: .03em;
+  }
+  .fc-rain.dry { color: var(--muted); }
 
-  .setup-box {
-    margin-top: 16px;
-    background: var(--surface);
-    border: 2px solid var(--border);
-    padding: 20px 28px;
-    font-size: 13px;
-    font-weight: 600;
-    line-height: 2.2;
-    max-width: 500px;
-  }
+  /* ─── STATE SCREENS ─── */
+  .state { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; }
+  .state-ttl { font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:36px; text-transform:uppercase; color:var(--text); }
+  .state-sub { font-size:14px; font-weight:600; color:var(--muted); text-align:center; max-width:440px; line-height:1.7; }
+  .setup-box { margin-top:16px; background:var(--card); border:1px solid var(--border); padding:20px 28px; font-size:13px; font-weight:600; line-height:2.2; max-width:500px; }
+  .setup-box code { background:rgba(0,0,0,.08); padding:2px 7px; font-family:monospace; font-size:12px; font-weight:700; }
 
-  .setup-box code {
-    background: var(--border);
-    padding: 2px 7px;
-    font-family: monospace;
-    font-size: 12px;
-    font-weight: 700;
-  }
-
-  @keyframes rise {
-    from { opacity: 0; transform: translateY(14px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  .dots { display: flex; gap: 10px; }
-  .dot {
-    width: 10px; height: 10px; border-radius: 50%;
-    background: var(--muted);
-    animation: blink 1.4s ease-in-out infinite;
-  }
-  .dot:nth-child(2) { animation-delay: 0.2s; }
-  .dot:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes blink {
-    0%,100% { opacity: 0.2; transform: scale(0.7); }
-    50%      { opacity: 1;   transform: scale(1); }
-  }
+  @keyframes rise { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+  .dots { display:flex; gap:10px; }
+  .dot { width:10px; height:10px; border-radius:50%; background:var(--muted); animation:blink 1.4s ease-in-out infinite; }
+  .dot:nth-child(2){animation-delay:.2s} .dot:nth-child(3){animation-delay:.4s}
+  @keyframes blink { 0%,100%{opacity:.2;transform:scale(.7)} 50%{opacity:1;transform:scale(1)} }
 </style>
 </head>
 <body>
-<div id="page" style="display:flex;flex-direction:column;height:100%;">
-  <div class="state-screen">
+
+<div class="sky"></div>
+
+<!-- Sun decorative — top right, partially behind clock area -->
+<div class="sun-wrap">
+  <svg class="sun-rays" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+    <!-- rays -->
+    <g transform="translate(70,70)" stroke="rgba(255,210,0,0.75)" stroke-width="3" stroke-linecap="round">
+      <line x1="0" y1="-46" x2="0" y2="-58"/>
+      <line x1="0" y1="-46" x2="0" y2="-58" transform="rotate(30)"/>
+      <line x1="0" y1="-46" x2="0" y2="-58" transform="rotate(60)"/>
+      <line x1="0" y1="-46" x2="0" y2="-58" transform="rotate(90)"/>
+      <line x1="0" y1="-46" x2="0" y2="-58" transform="rotate(120)"/>
+      <line x1="0" y1="-46" x2="0" y2="-58" transform="rotate(150)"/>
+      <line x1="0" y1="-46" x2="0" y2="-58" transform="rotate(180)"/>
+      <line x1="0" y1="-46" x2="0" y2="-58" transform="rotate(210)"/>
+      <line x1="0" y1="-46" x2="0" y2="-58" transform="rotate(240)"/>
+      <line x1="0" y1="-46" x2="0" y2="-58" transform="rotate(270)"/>
+      <line x1="0" y1="-46" x2="0" y2="-58" transform="rotate(300)"/>
+      <line x1="0" y1="-46" x2="0" y2="-58" transform="rotate(330)"/>
+    </g>
+  </svg>
+  <div class="sun-core"></div>
+</div>
+
+<!-- Mountains -->
+<svg class="mountains" viewBox="0 0 1440 340" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- far range -->
+  <polygon points="0,340 0,220 130,110 260,200 390,90 520,185 650,80 780,170 910,95 1040,190 1170,85 1300,180 1440,100 1440,340"
+    fill="rgba(148,195,232,0.38)"/>
+  <!-- mid range -->
+  <polygon points="0,340 0,260 110,165 230,230 360,145 490,225 620,140 750,230 880,148 1010,228 1140,145 1270,224 1400,150 1440,175 1440,340"
+    fill="rgba(110,168,215,0.50)"/>
+  <!-- front range -->
+  <polygon points="0,340 0,295 90,235 200,278 310,205 430,268 550,195 670,265 790,200 910,268 1030,198 1150,262 1270,205 1380,258 1440,220 1440,340"
+    fill="rgba(78,142,200,0.62)"/>
+  <!-- ground -->
+  <rect x="0" y="320" width="1440" height="20" fill="rgba(68,128,188,0.45)"/>
+</svg>
+
+<div id="page" class="page">
+  <div class="state">
     <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
-    <div class="state-title">Detecting location…</div>
+    <div class="state-ttl">Detecting location…</div>
   </div>
 </div>
 
 <script>
-// ── CONFIG ─────────────────────────────────────────
+// ── CONFIG ──────────────────────────────────────
 const API_KEY         = '7c593454d7264ca0b96192513261003';
 const REFRESH_MINUTES = 10;
-// ───────────────────────────────────────────────────
+// ─────────────────────────────────────────────────
 
-const AQI_BREAKPOINTS = [
-  { max:  50, label: 'Good',                     color: '#00c400', textColor: '#027302' },
-  { max: 100, label: 'Moderate',                 color: '#e6e600', textColor: '#8a7000' },
-  { max: 150, label: 'Unhealthy for Sensitive',  color: '#ff7e00', textColor: '#b05500' },
-  { max: 200, label: 'Unhealthy',                color: '#e60000', textColor: '#b00000' },
-  { max: 300, label: 'Very Unhealthy',           color: '#8f3f97', textColor: '#6b1f73' },
-  { max: 500, label: 'Hazardous',                color: '#7e0023', textColor: '#7e0023' },
+const AQI_BP = [
+  {max:50,  label:'Good',                    tc:'#027302'},
+  {max:100, label:'Moderate',                tc:'#8a7000'},
+  {max:150, label:'Unhealthy for Sensitive', tc:'#b05500'},
+  {max:200, label:'Unhealthy',               tc:'#b00000'},
+  {max:300, label:'Very Unhealthy',          tc:'#6b1f73'},
+  {max:500, label:'Hazardous',               tc:'#7e0023'},
 ];
+const UV_LBL = ['Low','Low','Low','Moderate','Moderate','Moderate','High','High','Very High','Very High','Very High','Extreme'];
 
-const UV_LABELS = ['Low','Low','Low','Moderate','Moderate','Moderate','High','High','Very High','Very High','Very High','Extreme'];
+function aqiInfo(v){ for(const b of AQI_BP) if(v<=b.max) return b; return AQI_BP[AQI_BP.length-1]; }
 
-function aqiInfo(val) {
-  for (const b of AQI_BREAKPOINTS) { if (val <= b.max) return b; }
-  return AQI_BREAKPOINTS[AQI_BREAKPOINTS.length - 1];
-}
-
-function calcAqiFromPm25(pm25) {
-  const bp = [
-    { cLow:   0.0, cHigh:  12.0, iLow:   0, iHigh:  50 },
-    { cLow:  12.1, cHigh:  35.4, iLow:  51, iHigh: 100 },
-    { cLow:  35.5, cHigh:  55.4, iLow: 101, iHigh: 150 },
-    { cLow:  55.5, cHigh: 150.4, iLow: 151, iHigh: 200 },
-    { cLow: 150.5, cHigh: 250.4, iLow: 201, iHigh: 300 },
-    { cLow: 250.5, cHigh: 350.4, iLow: 301, iHigh: 400 },
-    { cLow: 350.5, cHigh: 500.4, iLow: 401, iHigh: 500 },
+function pm25toAqi(pm){
+  const bp=[
+    {cl:0,   ch:12,   il:0,  ih:50 },
+    {cl:12.1,ch:35.4, il:51, ih:100},
+    {cl:35.5,ch:55.4, il:101,ih:150},
+    {cl:55.5,ch:150.4,il:151,ih:200},
+    {cl:150.5,ch:250.4,il:201,ih:300},
+    {cl:250.5,ch:350.4,il:301,ih:400},
+    {cl:350.5,ch:500.4,il:401,ih:500},
   ];
-  const c = Math.round(pm25 * 10) / 10;
-  for (const b of bp) {
-    if (c >= b.cLow && c <= b.cHigh)
-      return Math.round(((b.iHigh - b.iLow) / (b.cHigh - b.cLow)) * (c - b.cLow) + b.iLow);
-  }
-  return Math.min(500, Math.round(pm25 * 2));
+  const c=Math.round(pm*10)/10;
+  for(const b of bp) if(c>=b.cl&&c<=b.ch) return Math.round(((b.ih-b.il)/(b.ch-b.cl))*(c-b.cl)+b.il);
+  return Math.min(500,Math.round(pm*2));
 }
 
-function getAqiValue(aq) {
-  if (aq && aq['pm2_5'] != null) return calcAqiFromPm25(aq['pm2_5']);
-  const idx = aq ? (aq['us-epa-index'] || 1) : 1;
-  return [25, 25, 75, 125, 175, 250, 400][Math.min(idx, 6)];
+function getAqi(aq){
+  if(aq&&aq['pm2_5']!=null) return pm25toAqi(aq['pm2_5']);
+  const i=aq?(aq['us-epa-index']||1):1;
+  return [25,25,75,125,175,250,400][Math.min(i,6)];
 }
 
-function uvLabel(uv) { return UV_LABELS[Math.min(Math.round(uv), UV_LABELS.length - 1)]; }
-function windDir(deg) { return ['N','NE','E','SE','S','SW','W','NW'][Math.round(deg / 45) % 8]; }
+function uvLbl(u){ return UV_LBL[Math.min(Math.round(u),UV_LBL.length-1)]; }
+function wdir(d){ return ['N','NE','E','SE','S','SW','W','NW'][Math.round(d/45)%8]; }
 
-// ── SVG helpers ──────────────────────────────────
+/* ── SVG HELPERS (sized for full card) ── */
 
-function arcGauge(pct, color, size = 80) {
-  const r = size * 0.38, cx = size / 2, cy = size * 0.56;
-  const toRad = d => d * Math.PI / 180;
-  const pt = a => [cx + r * Math.cos(toRad(a)), cy + r * Math.sin(toRad(a))];
-  const [sx, sy] = pt(-200);
-  const [ex, ey] = pt(20);
-  const fillAngle = -200 + 220 * Math.min(pct, 1);
-  const [fx, fy] = pt(fillAngle);
-  const fillLarge = 220 * Math.min(pct,1) > 180 ? 1 : 0;
-  return `<svg class="gauge-svg" viewBox="0 0 ${size} ${size*0.65}" xmlns="http://www.w3.org/2000/svg">
-    <path d="M${sx} ${sy} A${r} ${r} 0 1 1 ${ex} ${ey}" fill="none" stroke="var(--surface2)" stroke-width="6" stroke-linecap="round"/>
-    <path d="M${sx} ${sy} A${r} ${r} 0 ${fillLarge} 1 ${fx} ${fy}" fill="none" stroke="${color}" stroke-width="6" stroke-linecap="round"/>
+function arcGauge(pct, color){
+  // Fixed pixel size, large enough to fill card right side
+  const W=130, H=88, r=50, cx=W/2, cy=60;
+  const toR=d=>d*Math.PI/180;
+  const pt=a=>[cx+r*Math.cos(toR(a)), cy+r*Math.sin(toR(a))];
+  const [sx,sy]=pt(-205); const [ex,ey]=pt(25);
+  const fA=-205+230*Math.min(pct,1);
+  const [fx,fy]=pt(fA);
+  const lg=230*Math.min(pct,1)>180?1:0;
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+    <path d="M${sx} ${sy} A${r} ${r} 0 1 1 ${ex} ${ey}" fill="none" stroke="rgba(0,0,0,0.10)" stroke-width="8" stroke-linecap="round"/>
+    <path d="M${sx} ${sy} A${r} ${r} 0 ${lg} 1 ${fx} ${fy}" fill="none" stroke="${color}" stroke-width="8" stroke-linecap="round"/>
   </svg>`;
 }
 
-function compassSvg(deg, color, size = 54) {
-  const cx = size/2, cy = size/2, r = size*0.42;
-  const rad = (deg - 90) * Math.PI / 180;
-  const tx  = cx + r*0.62*Math.cos(rad),   ty  = cy + r*0.62*Math.sin(rad);
-  const b1x = cx + r*0.20*Math.cos(rad+Math.PI/2), b1y = cy + r*0.20*Math.sin(rad+Math.PI/2);
-  const b2x = cx + r*0.20*Math.cos(rad-Math.PI/2), b2y = cy + r*0.20*Math.sin(rad-Math.PI/2);
-  const bx  = cx + r*0.42*Math.cos(rad+Math.PI),   by  = cy + r*0.42*Math.sin(rad+Math.PI);
-  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="${cx}" cy="${cy}" r="${r}" fill="var(--surface2)"/>
-    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--border)" stroke-width="1.5"/>
-    <text x="${cx}"   y="${cy-r+9}"  text-anchor="middle" font-family="Barlow Condensed" font-weight="800" font-size="9" fill="var(--muted)">N</text>
-    <text x="${cx}"   y="${cy+r-2}"  text-anchor="middle" font-family="Barlow Condensed" font-weight="800" font-size="9" fill="var(--muted)">S</text>
-    <text x="${cx+r-3}" y="${cy+3.5}" text-anchor="middle" font-family="Barlow Condensed" font-weight="800" font-size="9" fill="var(--muted)">E</text>
-    <text x="${cx-r+3}" y="${cy+3.5}" text-anchor="middle" font-family="Barlow Condensed" font-weight="800" font-size="9" fill="var(--muted)">W</text>
+function compassSvg(deg, color){
+  const S=90, cx=S/2, cy=S/2, r=S*0.42;
+  const rad=(deg-90)*Math.PI/180;
+  const tx=cx+r*.62*Math.cos(rad), ty=cy+r*.62*Math.sin(rad);
+  const b1x=cx+r*.20*Math.cos(rad+Math.PI/2), b1y=cy+r*.20*Math.sin(rad+Math.PI/2);
+  const b2x=cx+r*.20*Math.cos(rad-Math.PI/2), b2y=cy+r*.20*Math.sin(rad-Math.PI/2);
+  const bx=cx+r*.42*Math.cos(rad+Math.PI),    by=cy+r*.42*Math.sin(rad+Math.PI);
+  const fs=11;
+  return `<svg width="${S}" height="${S}" viewBox="0 0 ${S} ${S}" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="rgba(0,0,0,0.07)"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(0,0,0,0.15)" stroke-width="1.5"/>
+    <text x="${cx}"   y="${cy-r+11}" text-anchor="middle" font-family="Barlow Condensed" font-weight="800" font-size="${fs}" fill="${color}">N</text>
+    <text x="${cx}"   y="${cy+r-2}"  text-anchor="middle" font-family="Barlow Condensed" font-weight="800" font-size="${fs}" fill="rgba(0,0,0,.3)">S</text>
+    <text x="${cx+r-3}" y="${cy+4}"  text-anchor="middle" font-family="Barlow Condensed" font-weight="800" font-size="${fs}" fill="rgba(0,0,0,.3)">E</text>
+    <text x="${cx-r+3}" y="${cy+4}"  text-anchor="middle" font-family="Barlow Condensed" font-weight="800" font-size="${fs}" fill="rgba(0,0,0,.3)">W</text>
     <polygon points="${tx},${ty} ${b1x},${b1y} ${bx},${by} ${b2x},${b2y}" fill="${color}"/>
-    <circle cx="${cx}" cy="${cy}" r="3" fill="var(--text)"/>
+    <circle cx="${cx}" cy="${cy}" r="4" fill="rgba(0,0,0,.45)"/>
   </svg>`;
 }
 
-function rainDropsSvg(pct, color) {
-  const drops = 10, filled = Math.round(pct * drops);
-  let s = `<svg width="100%" height="30" viewBox="0 0 155 30" preserveAspectRatio="xMinYMid meet" xmlns="http://www.w3.org/2000/svg">`;
-  for (let i = 0; i < drops; i++) {
-    const x = 7 + i*15, c = i < filled ? color : 'var(--surface2)';
-    s += `<path d="M${x},3 C${x-4},9 ${x-5},15 ${x-5},19 a5,5 0 1,0 10,0 C${x+5},15 ${x+4},9 ${x},3Z" fill="${c}"/>`;
+function rainSvg(pct, color){
+  const drops=5, filled=Math.round(pct*drops);
+  const W=110, H=90;
+  // arrange 3 top row, 2 bottom
+  const pos=[[18,22],[55,22],[92,22],[36,60],[73,60]];
+  let s=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  for(let i=0;i<drops;i++){
+    const [x,y]=pos[i], c=i<filled?color:'rgba(0,0,0,0.11)';
+    s+=`<path d="M${x},${y-12} C${x-6},${y-5} ${x-9},${y+4} ${x-9},${y+10} a9,9 0 1,0 18,0 C${x+9},${y+4} ${x+6},${y-5} ${x},${y-12}Z" fill="${c}"/>`;
   }
-  return s + `</svg>`;
+  return s+`</svg>`;
 }
 
-function thermometerSvg(tempF, color) {
-  const pct = Math.max(0, Math.min(1, (tempF + 20) / 140));
-  const H=50, bR=7, tW=6, top=4, bot=H-bR-2;
-  const fillTop = bot - (bot - top) * pct;
-  return `<svg width="20" height="${H}" viewBox="0 0 20 ${H}" xmlns="http://www.w3.org/2000/svg">
-    <rect x="${10-tW/2}" y="${top}" width="${tW}" height="${bot-top}" rx="3" fill="var(--surface2)"/>
-    <rect x="${10-tW/2}" y="${fillTop}" width="${tW}" height="${bot-fillTop}" rx="2" fill="${color}"/>
-    <circle cx="10" cy="${H-bR}" r="${bR}" fill="${color}"/>
+function thermoSvg(tempF, color){
+  const pct=Math.max(0,Math.min(1,(tempF+20)/140));
+  const H=56,bR=8,tW=7,top=5,bot=H-bR-2;
+  const fTop=bot-(bot-top)*pct;
+  return `<svg width="22" height="${H}" viewBox="0 0 22 ${H}" xmlns="http://www.w3.org/2000/svg">
+    <rect x="${11-tW/2}" y="${top}" width="${tW}" height="${bot-top}" rx="3.5" fill="rgba(0,0,0,0.10)"/>
+    <rect x="${11-tW/2}" y="${fTop}" width="${tW}" height="${bot-fTop}" rx="2.5" fill="${color}"/>
+    <circle cx="11" cy="${H-bR}" r="${bR}" fill="${color}"/>
   </svg>`;
 }
 
-function visDotsSvg(miles, color) {
-  const steps = 10, filled = Math.min(steps, Math.round((Math.min(miles,10)/10)*steps));
-  let s = `<svg width="100%" height="22" viewBox="0 0 155 22" preserveAspectRatio="xMinYMid meet" xmlns="http://www.w3.org/2000/svg">`;
-  for (let i = 0; i < steps; i++) {
-    const x = 7+i*15, r = 3+(i/steps)*4, c = i < filled ? color : 'var(--surface2)';
-    s += `<circle cx="${x}" cy="11" r="${r}" fill="${c}" opacity="${0.35+(i/steps)*0.65}"/>`;
+function visSvg(miles, color){
+  const steps=8, filled=Math.min(steps,Math.round((Math.min(miles,10)/10)*steps));
+  const W=110, H=70;
+  // 4 cols × 2 rows
+  let s=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  for(let i=0;i<steps;i++){
+    const col=i%4, row=Math.floor(i/4);
+    const x=14+col*27, y=18+row*34;
+    const r=6+(i/steps)*5;
+    const c=i<filled?color:'rgba(0,0,0,0.10)';
+    s+=`<circle cx="${x}" cy="${y}" r="${r}" fill="${c}" opacity="${0.28+(i/steps)*.72}"/>`;
   }
-  return s + `</svg>`;
+  return s+`</svg>`;
 }
 
-// ── Clock ──
-function updateClock() {
-  const el = document.getElementById('clockEl'), de = document.getElementById('dateEl');
-  if (!el) return;
-  const n = new Date();
-  el.textContent = `${n.getHours().toString().padStart(2,'0')}:${n.getMinutes().toString().padStart(2,'0')}`;
-  de.textContent = n.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+/* ── CLOCK ── */
+function updateClock(){
+  const el=document.getElementById('clockEl'), de=document.getElementById('dateEl');
+  if(!el) return;
+  const n=new Date();
+  el.textContent=`${n.getHours().toString().padStart(2,'0')}:${n.getMinutes().toString().padStart(2,'0')}`;
+  de.textContent=n.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
 }
 
-// ── API ──
-function getLocation() {
-  return new Promise((res, rej) => {
-    if (!navigator.geolocation) return rej(new Error('Geolocation not supported'));
-    navigator.geolocation.getCurrentPosition(
-      p => res(`${p.coords.latitude},${p.coords.longitude}`),
-      e => rej(e), { timeout: 10000 }
-    );
+/* ── API ── */
+function getLoc(){
+  return new Promise((res,rej)=>{
+    if(!navigator.geolocation) return rej(new Error('No geolocation'));
+    navigator.geolocation.getCurrentPosition(p=>res(`${p.coords.latitude},${p.coords.longitude}`),e=>rej(e),{timeout:10000});
   });
 }
-
-async function fetchWeather(query) {
-  const r = await fetch(`https://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=${query}&aqi=yes`);
-  if (!r.ok) throw new Error(`API error ${r.status}`);
+async function fetchWx(q){
+  const r=await fetch(`https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${q}&days=2&aqi=yes&alerts=no`);
+  if(!r.ok) throw new Error(`API error ${r.status}`);
   return r.json();
 }
 
-// ── Render ──
-function render(data) {
-  const c = data.current, l = data.location;
-  const aqiVal  = getAqiValue(c.air_quality);
-  const aqiData = aqiInfo(aqiVal);
-  const aqiPct  = Math.min(aqiVal / 500, 1);
+/* ── RENDER ── */
+function render(data){
+  const c=data.current, l=data.location;
+  const aqiVal=getAqi(c.air_quality), aqiD=aqiInfo(aqiVal), aqiPct=Math.min(aqiVal/500,1);
+  const tF=Math.round(c.temp_f), flF=Math.round(c.feelslike_f);
+  const tPct=Math.max(0,Math.min(1,(tF+20)/140));
+  const flPct=Math.max(0,Math.min(1,(flF+20)/140));
+  const precipPct=Math.min(1,(c.precip_in||0)*5);
 
-  const tempF  = Math.round(c.temp_f);
-  const feelsF = Math.round(c.feelslike_f);
-  const tempPct  = Math.max(0, Math.min(1, (tempF  + 20) / 140));
-  const feelsPct = Math.max(0, Math.min(1, (feelsF + 20) / 140));
+  // Build next 12 hours from forecast
+  const nowEpoch = data.location.localtime_epoch || Math.floor(Date.now()/1000);
+  const allHours = [];
+  for(const day of data.forecast.forecastday){
+    for(const h of day.hour) allHours.push(h);
+  }
+  // Find the current hour slot and take next 12 (including current)
+  const nowHour = new Date(data.location.localtime).getHours();
+  const todayDate = data.location.localtime.split(' ')[0];
+  let startIdx = allHours.findIndex(h => {
+    const d = h.time.split(' ')[0], hr = parseInt(h.time.split(' ')[1]);
+    return d === todayDate && hr === nowHour;
+  });
+  if(startIdx < 0) startIdx = 0;
+  const next12 = allHours.slice(startIdx, startIdx + 12);
 
-  const precipPct = Math.min(1, (c.precip_in || 0) * 5);
+  function fmtHour(timeStr){
+    const hr = parseInt(timeStr.split(' ')[1]);
+    if(hr === nowHour && timeStr.split(' ')[0] === todayDate) return 'NOW';
+    const ampm = hr >= 12 ? 'PM' : 'AM';
+    const h12 = hr % 12 || 12;
+    return `${h12}${ampm}`;
+  }
 
-  document.getElementById('page').innerHTML = `
+  const forecastHtml = next12.map((h,i) => {
+    const label = fmtHour(h.time);
+    const temp = Math.round(h.temp_f);
+    const pop = h.chance_of_rain || 0;
+    const isNow = label === 'NOW';
+    return `<div class="fc-hour${isNow?' fc-now':''}">
+      <div class="fc-time">${label}</div>
+      <img class="fc-icon" src="https:${h.condition.icon}" alt="">
+      <div class="fc-temp">${temp}°</div>
+      <div class="fc-rain${pop<20?' dry':''}">💧${pop}%</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('page').innerHTML=`
     <div class="header">
       <div>
         <div class="location-name">${l.name}</div>
         <div class="location-region">${l.region} &middot; ${l.country}</div>
       </div>
-      <div class="header-center">
-        <img class="condition-icon" src="https:${c.condition.icon.replace('64x64','128x128')}" alt="${c.condition.text}">
-        <div class="condition-text">${c.condition.text}</div>
+      <div class="hdr-center">
+        <img class="cond-icon" src="https:${c.condition.icon.replace('64x64','128x128')}" alt="">
+        <div class="cond-text">${c.condition.text}</div>
       </div>
-      <div class="header-right">
+      <div class="hdr-right">
         <div class="clock" id="clockEl">--:--</div>
         <div class="date-line" id="dateEl">—</div>
       </div>
@@ -628,157 +567,142 @@ function render(data) {
     <div class="divider"></div>
 
     <div class="main">
-
       <!-- LEFT -->
       <div class="left-col">
-        <div class="temp-card">
-          <div class="temp-label">Temperature</div>
-          <div class="temp-row">
-            <div class="temp-big">${tempF}</div>
-            <div class="temp-unit-big">°F</div>
+        <div class="gc temp-card">
+          <div>
+            <div class="temp-lbl">Temperature</div>
+            <div class="temp-num-row">
+              <div class="temp-num">${tF}</div>
+              <div class="temp-deg">°F</div>
+            </div>
           </div>
-          <div style="width:100%;margin-top:6px;">
-            <div class="temp-scale-bar">
-              <div class="temp-scale-marker" style="left:${tempPct*100}%"></div>
-            </div>
-            <div class="temp-scale-labels">
-              <span>-20°</span><span>20°</span><span>60°</span><span>120°</span>
-            </div>
+          <div>
+            <div class="tscale-bar"><div class="tscale-marker" style="left:${tPct*100}%"></div></div>
+            <div class="tscale-lbls"><span>-20°</span><span>20°</span><span>60°</span><span>120°</span></div>
           </div>
         </div>
 
-        <div class="feels-card">
+        <div class="gc feels-card">
           <div class="feels-top">
-            <div class="feels-label">Feels Like</div>
-            <div class="feels-value">${feelsF}°F</div>
+            <div class="feels-lbl">Feels Like</div>
+            <div class="feels-val">${flF}°F</div>
           </div>
           <div class="thermo-row">
-            ${thermometerSvg(feelsF, 'var(--feels)')}
+            ${thermoSvg(flF,'var(--feels)')}
             <div class="scale-col">
-              <div class="temp-scale-bar" style="margin-top:0">
-                <div class="temp-scale-marker" style="left:${feelsPct*100}%"></div>
-              </div>
-              <div class="temp-scale-labels">
-                <span>Cold</span><span>Mild</span><span>Warm</span><span>Hot</span>
-              </div>
+              <div class="tscale-bar" style="margin-top:0"><div class="tscale-marker" style="left:${flPct*100}%"></div></div>
+              <div class="tscale-lbls"><span>Cold</span><span>Mild</span><span>Warm</span><span>Hot</span></div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- RIGHT GRID -->
+      <!-- RIGHT 3×2 -->
       <div class="right-col">
 
-        <!-- Humidity -->
-        <div class="data-card">
-          <div class="dc-label">Humidity</div>
-          <div class="dc-value" style="color:var(--humidity)">${c.humidity}<span style="font-size:0.5em;opacity:0.5">%</span></div>
-          <div class="dc-sub">${c.humidity < 30 ? 'Dry' : c.humidity < 60 ? 'Comfortable' : 'Humid'}</div>
-          <div class="dc-graphic">${arcGauge(c.humidity/100,'var(--humidity)',80)}</div>
+        <div class="dc">
+          <div class="dc-text">
+            <div class="dc-lbl">Humidity</div>
+            <div class="dc-val" style="color:var(--hum)">${c.humidity}<span style="font-size:.5em;opacity:.5">%</span></div>
+            <div class="dc-sub">${c.humidity<30?'Dry':c.humidity<60?'Comfortable':'Humid'}</div>
+          </div>
+          <div class="dc-gfx">${arcGauge(c.humidity/100,'var(--hum)')}</div>
         </div>
 
-        <!-- Wind -->
-        <div class="data-card">
-          <div class="dc-label">Wind Speed</div>
-          <div class="dc-value" style="color:var(--wind)">${Math.round(c.wind_mph)}<span style="font-size:0.45em;opacity:0.5"> mph</span></div>
-          <div class="dc-sub">Gusts ${Math.round(c.gust_mph)} mph</div>
-          <div class="compass-wrap">
-            ${compassSvg(c.wind_degree,'var(--wind)',54)}
-            <div class="wind-stats">
-              <div class="wind-stat">Dir: <strong>${windDir(c.wind_degree)} (${c.wind_degree}°)</strong></div>
-              <div class="wind-stat">Gust: <strong>${Math.round(c.gust_mph)} mph</strong></div>
+        <div class="dc">
+          <div class="dc-text">
+            <div class="dc-lbl">Wind Speed</div>
+            <div class="dc-val" style="color:var(--wind)">${Math.round(c.wind_mph)}<span style="font-size:.42em;opacity:.5"> mph</span></div>
+            <div class="dc-sub">Gusts ${Math.round(c.gust_mph)} mph</div>
+          </div>
+          <div class="dc-gfx" style="flex-direction:column;gap:4px;align-items:center">
+            ${compassSvg(c.wind_degree,'var(--wind)')}
+            <div style="font-size:10px;font-weight:700;color:var(--muted);text-align:center">${wdir(c.wind_degree)} · ${c.wind_degree}°</div>
+          </div>
+        </div>
+
+        <div class="dc">
+          <div class="dc-text">
+            <div class="dc-lbl">Precipitation</div>
+            <div class="dc-val" style="color:var(--rain)">${c.precip_in}"<span style="font-size:.4em;opacity:.5"> now</span></div>
+            <div class="dc-sub">${c.precip_in>0?'Active':'None currently'}</div>
+          </div>
+          <div class="dc-gfx">${rainSvg(precipPct,'var(--rain)')}</div>
+        </div>
+
+        <div class="dc">
+          <div class="dc-text">
+            <div class="dc-lbl">UV Index</div>
+            <div class="dc-val" style="color:var(--uv)">${c.uv}</div>
+            <div class="dc-sub">${uvLbl(c.uv)}</div>
+          </div>
+          <div class="dc-gfx">${arcGauge(Math.min(c.uv/11,1),'var(--uv)')}</div>
+        </div>
+
+        <div class="dc">
+          <div class="dc-text">
+            <div class="dc-lbl">Air Quality — EPA AQI</div>
+            <div class="dc-val" style="color:${aqiD.tc}">${aqiVal}</div>
+            <div class="dc-sub" style="color:${aqiD.tc};font-weight:800">${aqiD.label}</div>
+          </div>
+          <div class="dc-gfx">
+            <div class="aqi-bar-wrap">
+              <div class="aqi-grad"><div class="aqi-pin" style="left:${aqiPct*100}%"></div></div>
+              <div class="aqi-lbls"><span>0</span><span>100</span><span>200</span><span>300</span><span>500</span></div>
             </div>
           </div>
         </div>
 
-        <!-- Precipitation -->
-        <div class="data-card">
-          <div class="dc-label">Precipitation</div>
-          <div class="dc-value" style="color:var(--rain)">${c.precip_in}"<span style="font-size:0.42em;opacity:0.5"> now</span></div>
-          <div class="dc-sub">${c.precip_in > 0 ? 'Active precipitation' : 'None currently'}</div>
-          <div class="dc-graphic" style="width:100%">${rainDropsSvg(precipPct,'var(--rain)')}</div>
-        </div>
-
-        <!-- UV -->
-        <div class="data-card">
-          <div class="dc-label">UV Index</div>
-          <div class="dc-value" style="color:var(--uv)">${c.uv}</div>
-          <div class="dc-sub">${uvLabel(c.uv)}</div>
-          <div class="dc-graphic">${arcGauge(Math.min(c.uv/11,1),'var(--uv)',80)}</div>
-        </div>
-
-        <!-- AQI -->
-        <div class="data-card">
-          <div class="dc-label">Air Quality — EPA AQI</div>
-          <div class="dc-value" style="color:${aqiData.textColor}">${aqiVal}</div>
-          <div class="dc-sub" style="color:${aqiData.textColor};font-weight:800">${aqiData.label}</div>
-          <div class="aqi-bar-wrap">
-            <div class="aqi-gradient-bar">
-              <div class="aqi-marker" style="left:${aqiPct*100}%"></div>
-            </div>
-            <div class="aqi-scale-labels">
-              <span>0</span><span>100</span><span>200</span><span>300</span><span>400</span><span>500</span>
-            </div>
+        <div class="dc">
+          <div class="dc-text">
+            <div class="dc-lbl">Visibility</div>
+            <div class="dc-val" style="color:var(--vis)">${Math.round(c.vis_miles)}<span style="font-size:.42em;opacity:.5"> mi</span></div>
+            <div class="dc-sub">${c.vis_miles>=10?'Clear':c.vis_miles>=5?'Good':c.vis_miles>=2?'Moderate':'Poor'}</div>
           </div>
+          <div class="dc-gfx">${visSvg(c.vis_miles,'var(--vis)')}</div>
         </div>
 
-        <!-- Visibility -->
-        <div class="data-card">
-          <div class="dc-label">Visibility</div>
-          <div class="dc-value" style="color:var(--vis)">${Math.round(c.vis_miles)}<span style="font-size:0.45em;opacity:0.5"> mi</span></div>
-          <div class="dc-sub">${c.vis_miles >= 10 ? 'Clear' : c.vis_miles >= 5 ? 'Good' : c.vis_miles >= 2 ? 'Moderate' : 'Poor'}</div>
-          <div class="dc-graphic" style="width:100%">${visDotsSvg(c.vis_miles,'var(--vis)')}</div>
-        </div>
+      </div><!-- /right-col -->
+    </div><!-- /main -->
 
-      </div>
-    </div>
+    <div class="forecast-strip">${forecastHtml}</div>
 
     <div class="footer">
-      <div class="footer-txt">Updated ${new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})} &nbsp;&middot;&nbsp; Refreshes every ${REFRESH_MINUTES} min</div>
-      <div class="footer-right">WeatherAPI.com</div>
+      <div class="foot-l">Updated ${new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})} &nbsp;&middot;&nbsp; Refreshes every ${REFRESH_MINUTES} min</div>
+      <div class="foot-r">WeatherAPI.com</div>
     </div>
   `;
 
   updateClock();
-  setInterval(updateClock, 1000);
+  setInterval(updateClock,1000);
 }
 
-function showError(title, msg, showSetup=false) {
-  document.getElementById('page').innerHTML = `
-    <div class="state-screen">
-      <div class="state-title">${title}</div>
+function showError(title,msg,setup=false){
+  document.getElementById('page').innerHTML=`
+    <div class="state">
+      <div class="state-ttl">${title}</div>
       <div class="state-sub">${msg}</div>
-      ${showSetup ? `<div class="setup-box">
-        1. Sign up free at <code>weatherapi.com</code><br>
-        2. Copy your API key from the dashboard<br>
-        3. Open this file and replace <code>YOUR_API_KEY_HERE</code> near the top of the script
-      </div>` : ''}
+      ${setup?`<div class="setup-box">1. Sign up free at <code>weatherapi.com</code><br>2. Copy your API key<br>3. Replace <code>YOUR_API_KEY_HERE</code> in this file</div>`:''}
     </div>`;
 }
 
-async function load() {
-  document.getElementById('page').innerHTML = `
-    <div class="state-screen">
-      <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
-      <div class="state-title">Detecting location…</div>
-    </div>`;
-
-  if (API_KEY === 'YOUR_API_KEY_HERE') { showError('API Key Required','You need a free WeatherAPI.com key to use this widget.',true); return; }
-
-  try {
-    const query = await getLocation();
-    const el = document.querySelector('.state-title');
-    if (el) el.textContent = 'Fetching weather…';
-    render(await fetchWeather(query));
-  } catch(err) {
-    if (err.code === 1)                                          showError('Location Access Denied','Please allow location access in your browser and reload.');
-    else if (err.message.includes('403')||err.message.includes('401')) showError('API Key Invalid','Check your WeatherAPI.com key is correct and active.',true);
-    else                                                         showError('Could not load weather',`${err.message} — will retry in ${REFRESH_MINUTES} min.`);
+async function load(){
+  document.getElementById('page').innerHTML=`<div class="state"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><div class="state-ttl">Detecting location…</div></div>`;
+  if(API_KEY==='YOUR_API_KEY_HERE'){showError('API Key Required','You need a free WeatherAPI.com key.',true);return;}
+  try{
+    const q=await getLoc();
+    const el=document.querySelector('.state-ttl'); if(el) el.textContent='Fetching weather…';
+    render(await fetchWx(q));
+  }catch(err){
+    if(err.code===1) showError('Location Denied','Allow location access and reload.');
+    else if(err.message.includes('403')||err.message.includes('401')) showError('API Key Invalid','Check your WeatherAPI.com key.',true);
+    else showError('Could not load',`${err.message} — retrying in ${REFRESH_MINUTES} min.`);
   }
 }
 
 load();
-setInterval(load, REFRESH_MINUTES * 60 * 1000);
+setInterval(load, REFRESH_MINUTES*60*1000);
 </script>
 </body>
 </html>
