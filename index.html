@@ -364,8 +364,14 @@
 
 <script>
 // ── CONFIG ──────────────────────────────────────
-const API_KEY         = '7c593454d7264ca0b96192513261003';
-const REFRESH_MINUTES = 10;
+const API_KEY           = '7c593454d7264ca0b96192513261003';
+const REFRESH_MINUTES   = 10;
+
+// Default location — used when USE_GEOLOCATION is false or location is denied
+const DEFAULT_LOCATION  = '53716';   // Monona, WI ZIP code
+
+// Set to true to attempt browser geolocation instead of DEFAULT_LOCATION
+const USE_GEOLOCATION   = false;
 // ─────────────────────────────────────────────────
 
 const AQI_BP = [
@@ -688,15 +694,20 @@ function showError(title,msg,setup=false){
 }
 
 async function load(){
-  document.getElementById('page').innerHTML=`<div class="state"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><div class="state-ttl">Detecting location…</div></div>`;
+  document.getElementById('page').innerHTML=`<div class="state"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><div class="state-ttl">Loading weather…</div></div>`;
   if(API_KEY==='YOUR_API_KEY_HERE'){showError('API Key Required','You need a free WeatherAPI.com key.',true);return;}
   try{
-    const q=await getLoc();
-    const el=document.querySelector('.state-ttl'); if(el) el.textContent='Fetching weather…';
-    render(await fetchWx(q));
+    let query = DEFAULT_LOCATION;
+    if(USE_GEOLOCATION){
+      try {
+        query = await getLoc();
+      } catch(e) {
+        console.warn('Geolocation failed, falling back to default location:', e.message);
+      }
+    }
+    render(await fetchWx(query));
   }catch(err){
-    if(err.code===1) showError('Location Denied','Allow location access and reload.');
-    else if(err.message.includes('403')||err.message.includes('401')) showError('API Key Invalid','Check your WeatherAPI.com key.',true);
+    if(err.message.includes('403')||err.message.includes('401')) showError('API Key Invalid','Check your WeatherAPI.com key.',true);
     else showError('Could not load',`${err.message} — retrying in ${REFRESH_MINUTES} min.`);
   }
 }
