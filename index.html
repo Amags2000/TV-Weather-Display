@@ -427,6 +427,44 @@ function arcGauge(pct, color){
   </svg>`;
 }
 
+// Gauge that surrounds a centered number, with end labels at each tip
+function centeredGauge(pct, color, valueText, unitText, minLabel, maxLabel){
+  const W=200, H=150, r=72, cx=W/2, cy=108;
+  const startAngle=-215, sweep=250;
+  const toR=d=>d*Math.PI/180;
+  const pt=(a,rad)=>[cx+rad*Math.cos(toR(a)), cy+rad*Math.sin(toR(a))];
+  const [sx,sy]=pt(startAngle,r);
+  const endAngle=startAngle+sweep;
+  const [ex,ey]=pt(endAngle,r);
+  const fA=startAngle+sweep*Math.min(pct,1);
+  const [fx,fy]=pt(fA,r);
+  const lg=sweep*Math.min(pct,1)>180?1:0;
+
+  // Label positions: sit just outside the arc tips
+  const lblR=r+14;
+  const [lx,ly]=pt(startAngle,lblR);
+  const [rx2,ry2]=pt(endAngle,lblR);
+
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+    <!-- Track -->
+    <path d="M${sx} ${sy} A${r} ${r} 0 1 1 ${ex} ${ey}" fill="none" stroke="rgba(0,0,0,0.10)" stroke-width="11" stroke-linecap="round"/>
+    <!-- Fill -->
+    <path d="M${sx} ${sy} A${r} ${r} 0 ${lg} 1 ${fx} ${fy}" fill="none" stroke="${color}" stroke-width="11" stroke-linecap="round"/>
+    <!-- Center value -->
+    <text x="${cx}" y="${cy-12}" text-anchor="middle" dominant-baseline="middle"
+      font-family="Barlow Condensed" font-weight="900" font-size="52" fill="${color}">${valueText}</text>
+    <!-- Unit below value -->
+    <text x="${cx}" y="${cy+22}" text-anchor="middle" dominant-baseline="middle"
+      font-family="Barlow Condensed" font-weight="700" font-size="20" fill="${color}" opacity="0.6">${unitText}</text>
+    <!-- Min label at start tip -->
+    <text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle"
+      font-family="Barlow" font-weight="800" font-size="13" fill="rgba(13,35,64,0.50)">${minLabel}</text>
+    <!-- Max label at end tip -->
+    <text x="${rx2}" y="${ry2}" text-anchor="middle" dominant-baseline="middle"
+      font-family="Barlow" font-weight="800" font-size="13" fill="rgba(13,35,64,0.50)">${maxLabel}</text>
+  </svg>`;
+}
+
 function compassSvg(deg, color){
   const S=90, cx=S/2, cy=S/2, r=S*0.42;
   const rad=(deg-90)*Math.PI/180;
@@ -632,13 +670,12 @@ function render(data){
       <!-- RIGHT 3×2 -->
       <div class="right-col">
 
-        <div class="dc">
-          <div class="dc-text">
-            <div class="dc-lbl">Humidity</div>
-            <div class="dc-val" style="color:var(--hum)">${c.humidity}<span style="font-size:.5em;opacity:.5">%</span></div>
-            <div class="dc-sub">${c.humidity<30?'Dry':c.humidity<60?'Comfortable':'Humid'}</div>
+        <div class="dc" style="justify-content:center">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+            <div class="dc-lbl" style="font-size:13px;letter-spacing:.2em;">Humidity</div>
+            ${centeredGauge(c.humidity/100,'var(--hum)',c.humidity,'%','0%','100%')}
+            <div class="dc-sub" style="font-size:14px;">${c.humidity<30?'Dry':c.humidity<60?'Comfortable':'Humid'}</div>
           </div>
-          <div class="dc-gfx">${arcGauge(c.humidity/100,'var(--hum)')}</div>
         </div>
 
         <div class="dc">
@@ -662,13 +699,12 @@ function render(data){
           <div class="dc-gfx">${rainSvg(precipPct,'var(--rain)')}</div>
         </div>
 
-        <div class="dc">
-          <div class="dc-text">
-            <div class="dc-lbl">UV Index</div>
-            <div class="dc-val" style="color:var(--uv)">${c.uv}</div>
-            <div class="dc-sub">${uvLbl(c.uv)}</div>
+        <div class="dc" style="justify-content:center">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+            <div class="dc-lbl" style="font-size:13px;letter-spacing:.2em;">UV Index</div>
+            ${centeredGauge(Math.min(c.uv/11,1),'var(--uv)',c.uv,'/ 11','0','11')}
+            <div class="dc-sub" style="font-size:14px;">${uvLbl(c.uv)}</div>
           </div>
-          <div class="dc-gfx">${arcGauge(Math.min(c.uv/11,1),'var(--uv)')}</div>
         </div>
 
         <div class="dc">
