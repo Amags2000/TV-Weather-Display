@@ -159,12 +159,12 @@
   .temp-num {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 900; font-size: 110px; line-height: .85;
-    color: var(--temp); letter-spacing: -3px;
+    color: var(--muted); letter-spacing: -3px;
   }
   .temp-deg {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700; font-size: 34px;
-    color: var(--temp); opacity: .6; margin-top: 8px;
+    color: var(--muted); opacity: .6; margin-top: 8px;
   }
   .tscale-bar {
     height: 8px; border-radius: 4px;
@@ -194,7 +194,7 @@
   }
   .feels-val {
     font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 900; font-size: 38px; line-height: 1; color: var(--feels);
+    font-weight: 900; font-size: 38px; line-height: 1; color: var(--muted);
   }
   .thermo-row { display: flex; align-items: center; gap: 10px; }
   .scale-col { flex: 1; }
@@ -486,7 +486,30 @@ function visSvg(miles, color){
   return s+`</svg>`;
 }
 
-/* ── CLOCK ── */
+/* ── TEMP GRADIENT COLOR ── */
+// Matches the CSS gradient: blue → green → yellow → orange → red
+// across the -20°F to 120°F range
+function tempColor(tempF) {
+  const stops = [
+    { pct: 0.00, r: 29,  g: 127, b: 196 }, // #1d7fc4 blue      (-20°F)
+    { pct: 0.28, r: 46,  g: 175, b: 110 }, // #2eaf6e green      (19°F)
+    { pct: 0.55, r: 201, g: 150, b: 10  }, // #c9960a yellow     (57°F)
+    { pct: 0.75, r: 244, g: 135, b: 43  }, // #f4872b orange     (85°F)
+    { pct: 1.00, r: 230, g: 57,  b: 70  }, // #e63946 red        (120°F)
+  ];
+  const pct = Math.max(0, Math.min(1, (tempF + 20) / 140));
+  let lo = stops[0], hi = stops[stops.length - 1];
+  for (let i = 0; i < stops.length - 1; i++) {
+    if (pct >= stops[i].pct && pct <= stops[i+1].pct) {
+      lo = stops[i]; hi = stops[i+1]; break;
+    }
+  }
+  const t = lo.pct === hi.pct ? 0 : (pct - lo.pct) / (hi.pct - lo.pct);
+  const r = Math.round(lo.r + t * (hi.r - lo.r));
+  const g = Math.round(lo.g + t * (hi.g - lo.g));
+  const b = Math.round(lo.b + t * (hi.b - lo.b));
+  return `rgb(${r},${g},${b})`;
+}
 function updateClock(){
   const el=document.getElementById('clockEl'), de=document.getElementById('dateEl');
   if(!el) return;
@@ -515,6 +538,8 @@ function render(data){
   const tF=Math.round(c.temp_f), flF=Math.round(c.feelslike_f);
   const tPct=Math.max(0,Math.min(1,(tF+20)/140));
   const flPct=Math.max(0,Math.min(1,(flF+20)/140));
+  const tColor=tempColor(tF);
+  const flColor=tempColor(flF);
   const precipPct=Math.min(1,(c.precip_in||0)*5);
 
   // Build next 12 hours from forecast
@@ -579,8 +604,8 @@ function render(data){
           <div>
             <div class="temp-lbl">Temperature</div>
             <div class="temp-num-row">
-              <div class="temp-num">${tF}</div>
-              <div class="temp-deg">°F</div>
+              <div class="temp-num" style="color:${tColor}">${tF}</div>
+              <div class="temp-deg" style="color:${tColor}">°F</div>
             </div>
           </div>
           <div>
@@ -592,10 +617,10 @@ function render(data){
         <div class="gc feels-card">
           <div class="feels-top">
             <div class="feels-lbl">Feels Like</div>
-            <div class="feels-val">${flF}°F</div>
+            <div class="feels-val" style="color:${flColor}">${flF}°F</div>
           </div>
           <div class="thermo-row">
-            ${thermoSvg(flF,'var(--feels)')}
+            ${thermoSvg(flF,flColor)}
             <div class="scale-col">
               <div class="tscale-bar" style="margin-top:0"><div class="tscale-marker" style="left:${flPct*100}%"></div></div>
               <div class="tscale-lbls"><span>Cold</span><span>Mild</span><span>Warm</span><span>Hot</span></div>
